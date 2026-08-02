@@ -1,0 +1,2386 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>C++ Cyber Forest | 3D Data Forest Hub</title>
+    <meta
+      name="description"
+      content="Magical 3D Cyber Forest with glowing magical trees, C++ logo 3D cube explosion, automation tree, portfolio tree, interactive 3D project cubes, and live C++ terminal."
+    />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,500;0,700;1,400&family=Outfit:wght@300;400;600;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- CDNs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      :root {
+        --font-ui: "Outfit", -apple-system, BlinkMacSystemFont, sans-serif;
+        --font-code: "JetBrains Mono", monospace;
+
+        --accent-cyan: #00f3ff;
+        --accent-gold: #ffb700;
+        --accent-magenta: #ff2a85;
+        --accent-emerald: #00ffaa;
+
+        --glass-bg: rgba(14, 8, 28, 0.85);
+        --glass-border: rgba(0, 243, 255, 0.35);
+        --glass-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.75);
+
+        --text-main: #f0f4f8;
+        --text-muted: #9aa8b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #0b0314;
+        font-family: var(--font-ui);
+        color: var(--text-main);
+      }
+
+      #webgl-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+
+      /* Loading Screen */
+      #loader {
+        position: fixed;
+        inset: 0;
+        background: #07020d;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition:
+          opacity 0.6s ease,
+          visibility 0.6s ease;
+      }
+
+      #loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .loader-ring {
+        width: 90px;
+        height: 90px;
+        border: 3px solid rgba(255, 183, 0, 0.15);
+        border-top: 3px solid var(--accent-gold);
+        border-right: 3px solid var(--accent-cyan);
+        border-radius: 50%;
+        animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+        margin-bottom: 24px;
+        box-shadow: 0 0 35px rgba(0, 243, 255, 0.5);
+      }
+
+      .loader-text {
+        font-size: 1.3rem;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        font-weight: 900;
+        background: linear-gradient(
+          90deg,
+          var(--accent-gold),
+          var(--accent-cyan),
+          var(--accent-magenta)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .loader-subtext {
+        margin-top: 8px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-family: var(--font-code);
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* UI Overlay Layer */
+      .ui-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 20px;
+      }
+
+      .interactive {
+        pointer-events: auto;
+      }
+
+      .glass-panel {
+        background: var(--glass-bg);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--glass-shadow);
+      }
+
+      /* Header */
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+      }
+
+      .brand-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 18px;
+      }
+
+      .brand-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: linear-gradient(
+          135deg,
+          var(--accent-cyan),
+          var(--accent-gold)
+        );
+        display: grid;
+        place-items: center;
+        box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+      }
+
+      .brand-title {
+        font-size: 1.15rem;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        color: #fff;
+        line-height: 1.1;
+      }
+
+      .brand-subtitle {
+        font-size: 0.75rem;
+        color: var(--accent-cyan);
+        font-family: var(--font-code);
+        font-weight: 500;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        color: var(--text-main);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(12px);
+      }
+
+      .icon-btn:hover {
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .icon-btn.active {
+        background: rgba(0, 243, 255, 0.15);
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+      }
+
+      /* Controls Banner (Bottom Center) */
+      .controls-banner {
+        align-self: center;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 10px 22px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border-radius: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      }
+
+      .key-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-family: var(--font-code);
+        font-size: 0.75rem;
+        color: var(--accent-cyan);
+        margin-right: 4px;
+      }
+
+      /* Compass Widget (Bottom-Left) */
+      .compass-widget {
+        position: absolute;
+        bottom: 24px;
+        left: 24px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--glass-bg);
+        border: 1.5px solid var(--glass-border);
+        display: grid;
+        place-items: center;
+        z-index: 20;
+        box-shadow: var(--glass-shadow);
+      }
+
+      .compass-dial {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 1px dashed rgba(0, 243, 255, 0.4);
+        position: relative;
+        transition: transform 0.1s linear;
+      }
+
+      .compass-pointer {
+        position: absolute;
+        top: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 12px solid var(--accent-gold);
+        filter: drop-shadow(0 0 6px var(--accent-gold));
+      }
+
+      /* Camera Controls Widget (Bottom-Right) */
+      .camera-controls-widget {
+        position: absolute;
+        bottom: 24px;
+        right: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 20;
+      }
+
+      .star-badge {
+        font-size: 1.2rem;
+        color: var(--accent-cyan);
+        filter: drop-shadow(0 0 10px var(--accent-cyan));
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+
+      .controls-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 16px;
+      }
+
+      .cam-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: 1px solid var(--glass-border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-main);
+        font-family: var(--font-code);
+        font-weight: 700;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition: all 0.2s ease;
+      }
+
+      .cam-btn:hover {
+        background: var(--accent-cyan);
+        color: #000;
+        box-shadow: 0 0 18px var(--accent-cyan);
+        transform: scale(1.05);
+      }
+
+      /* Proximity Banner */
+      #proximity-prompt {
+        position: absolute;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        z-index: 100;
+        background: rgba(14, 8, 28, 0.9);
+        border: 1.5px solid var(--accent-gold);
+        box-shadow: 0 0 25px rgba(255, 183, 0, 0.4);
+        border-radius: 30px;
+        padding: 12px 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--accent-gold);
+        font-family: var(--font-code);
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+      }
+
+      #proximity-prompt.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* Modal HUD (No description, Project Name + Link Only) */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        background: rgba(7, 3, 15, 0.85);
+        backdrop-filter: blur(16px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        padding: 20px;
+      }
+
+      .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .modal-container {
+        width: 92%;
+        max-width: 720px;
+        max-height: 85vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        border-radius: 24px;
+        padding: 32px;
+        position: relative;
+        transform: scale(0.92);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      .modal-overlay.active .modal-container {
+        transform: scale(1);
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: #fff;
+      }
+
+      .modal-close:hover {
+        background: var(--accent-magenta);
+        border-color: var(--accent-magenta);
+        color: #fff;
+        box-shadow: 0 0 18px var(--accent-magenta);
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+
+      .modal-badge {
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-family: var(--font-code);
+        font-weight: 700;
+        text-transform: uppercase;
+        background: rgba(255, 183, 0, 0.15);
+        color: var(--accent-gold);
+        border: 1px solid var(--accent-gold);
+      }
+
+      .modal-title {
+        font-size: 1.8rem;
+        font-weight: 900;
+        background: linear-gradient(90deg, #fff, var(--accent-cyan));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+        width: 100%;
+      }
+
+      .project-card {
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        width: 100%;
+        overflow: hidden;
+        transition: all 0.2s ease;
+      }
+
+      .project-card:hover {
+        border-color: var(--accent-cyan);
+        background: rgba(0, 243, 255, 0.08);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0, 243, 255, 0.2);
+      }
+
+      .project-card-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #fff;
+        flex: 1;
+        min-width: 0;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        line-height: 1.3;
+      }
+
+      .project-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 10px;
+        background: rgba(0, 243, 255, 0.1);
+        border: 1px solid var(--accent-cyan);
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        text-decoration: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+      }
+
+      .project-link-btn:hover {
+        background: var(--accent-cyan);
+        color: #000;
+        box-shadow: 0 0 15px var(--accent-cyan);
+      }
+
+      /* Terminal Container */
+      .terminal-container {
+        background: #04020a;
+        border: 1px solid rgba(255, 183, 0, 0.5);
+        border-radius: 14px;
+        padding: 18px;
+        font-family: var(--font-code);
+        font-size: 0.88rem;
+        color: var(--accent-gold);
+        box-shadow:
+          inset 0 0 20px rgba(0, 0, 0, 0.8),
+          0 0 25px rgba(255, 183, 0, 0.2);
+      }
+
+      .terminal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 10px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text-muted);
+        font-size: 0.78rem;
+      }
+
+      .terminal-output {
+        max-height: 220px;
+        overflow-y: auto;
+        margin-bottom: 12px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
+
+      .terminal-input-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--accent-cyan);
+      }
+
+      .terminal-input {
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #fff;
+        font-family: var(--font-code);
+        font-size: 0.88rem;
+        flex: 1;
+      }
+
+      @media (max-width: 768px) {
+        .controls-banner,
+        .brand-subtitle {
+          display: none;
+        }
+        .compass-widget {
+          bottom: 16px;
+          left: 16px;
+          width: 48px;
+          height: 48px;
+        }
+        .camera-controls-widget {
+          bottom: 16px;
+          right: 16px;
+        }
+        .modal-container {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div id="loader">
+      <div class="loader-ring"></div>
+      <div class="loader-text">Loading Cyber Forest</div>
+      <div class="loader-subtext">
+        Mounting Magical C++ Tree, 3D Glowing Cubes & Automation World...
+      </div>
+    </div>
+
+    <!-- 3D WebGL Canvas Container -->
+    <div id="webgl-container"></div>
+
+    <!-- Proximity Interaction Banner -->
+    <div id="proximity-prompt">
+      <i data-lucide="sparkles" style="width: 20px; height: 20px"></i>
+      <span id="prompt-text">PRESS [E] TO INTERACT</span>
+    </div>
+
+    <!-- Compass Widget (Bottom-Left) -->
+    <div class="compass-widget interactive" title="Camera Orientation Compass">
+      <div class="compass-dial" id="compass-dial">
+        <div class="compass-pointer"></div>
+      </div>
+    </div>
+
+    <!-- Camera Controls Box (Bottom-Right) -->
+    <div class="camera-controls-widget interactive">
+      <div class="star-badge">✦</div>
+      <div class="controls-box glass-panel">
+        <button
+          class="icon-btn"
+          id="terminal-trigger-btn"
+          style="width: 36px; height: 36px; border-radius: 10px"
+          title="Open C++ Kernel Terminal"
+        >
+          <i data-lucide="terminal" style="width: 18px; height: 18px"></i>
+        </button>
+        <button class="cam-btn" id="cam-prev-btn" title="Automation World View">
+          &lt;
+        </button>
+        <button class="cam-btn" id="cam-reset-btn" title="C++ Core World View">
+          o
+        </button>
+        <button
+          class="cam-btn"
+          id="cam-next-btn"
+          title="My Main Portfolio World View"
+        >
+          &gt;
+        </button>
+      </div>
+    </div>
+
+    <!-- UI Overlay Layer -->
+    <div class="ui-layer">
+      <header>
+        <div class="brand-container glass-panel interactive">
+          <div class="brand-icon">
+            <i
+              data-lucide="trees"
+              style="width: 22px; height: 22px; color: #07020d"
+            ></i>
+          </div>
+          <div>
+            <div class="brand-title">C++ Cyber Forest</div>
+            <div class="brand-subtitle">3D Portfolio Universe</div>
+          </div>
+        </div>
+
+        <div class="header-actions interactive">
+          <button
+            class="icon-btn"
+            id="audio-toggle-btn"
+            title="Toggle Ambient Synth Music"
+          >
+            <i
+              data-lucide="volume-x"
+              id="audio-icon"
+              style="width: 20px; height: 20px"
+            ></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="controls-banner glass-panel">
+        <span><span class="key-badge">W A S D</span> Walk</span>
+        <span><span class="key-badge">SHIFT</span> Run</span>
+        <span><span class="key-badge">E</span> Interact</span>
+        <span><span class="key-badge">MOUSE</span> Orbit View</span>
+      </div>
+    </div>
+
+    <!-- Project HUD Modal (Strictly Project Name + Link Only) -->
+    <div class="modal-overlay" id="project-modal">
+      <div class="modal-container glass-panel interactive">
+        <button class="modal-close" id="modal-close-btn">
+          <i data-lucide="x" style="width: 20px; height: 20px"></i>
+        </button>
+
+        <div class="modal-header">
+          <span class="modal-badge" id="modal-badge">ZONE SPECS</span>
+          <h2 class="modal-title" id="modal-title">Zone Projects</h2>
+        </div>
+
+        <div class="projects-grid" id="modal-projects-grid"></div>
+      </div>
+    </div>
+
+    <!-- Live C++ Terminal Modal -->
+    <div class="modal-overlay" id="terminal-modal">
+      <div
+        class="modal-container glass-panel interactive"
+        style="max-width: 780px"
+      >
+        <button class="modal-close" id="terminal-close-btn">
+          <i data-lucide="x" style="width: 20px; height: 20px"></i>
+        </button>
+
+        <div class="modal-header">
+          <span
+            class="modal-badge"
+            style="
+              background: rgba(255, 183, 0, 0.15);
+              color: var(--accent-gold);
+              border-color: var(--accent-gold);
+            "
+            >C++20 KERNEL</span
+          >
+          <h2 class="modal-title">Underground Core Terminal</h2>
+        </div>
+
+        <div class="terminal-container">
+          <div class="terminal-header">
+            <span>CYBER_OS v6.5.0-x86_64</span>
+            <span>TYPE 'help' FOR COMMANDS</span>
+          </div>
+          <div class="terminal-output" id="terminal-output">
+            [BOOT] Mounting C++ Core Filesystem... DONE [INFO] 5
+            High-Performance 3D Cubes Ready. Type 'ls' or 'projects' to inspect
+            systems.
+          </div>
+          <div class="terminal-input-row">
+            <span>cpp-root@cyber-forest:~$</span>
+            <input
+              type="text"
+              class="terminal-input"
+              id="terminal-input"
+              placeholder="Type command..."
+              autocomplete="off"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main JavaScript Engine -->
+    <script>
+      // Dismiss loader smoothly
+      function hideLoader() {
+        const loader = document.getElementById("loader");
+        if (loader && !loader.classList.contains("hidden")) {
+          loader.classList.add("hidden");
+        }
+      }
+      setTimeout(hideLoader, 600);
+      window.addEventListener("load", hideLoader);
+      document.addEventListener("DOMContentLoaded", hideLoader);
+
+      if (window.lucide && typeof lucide.createIcons === "function") {
+        lucide.createIcons();
+      }
+
+      /* =========================================================================
+           1. AUDIO ENGINE (Web Audio API Synthesizer)
+           ========================================================================= */
+      class SoundEngine {
+        constructor() {
+          this.ctx = null;
+          this.isMuted = true;
+          this.bgOscs = null;
+        }
+
+        init() {
+          if (this.ctx) return;
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+
+        toggleSound() {
+          this.init();
+          if (!this.ctx) return false;
+          if (this.ctx.state === "suspended") this.ctx.resume();
+          this.isMuted = !this.isMuted;
+
+          const btn = document.getElementById("audio-toggle-btn");
+          const icon = document.getElementById("audio-icon");
+
+          if (!this.isMuted) {
+            if (btn) btn.classList.add("active");
+            if (icon) icon.setAttribute("data-lucide", "volume-2");
+            this.startAmbientDrone();
+            this.playChime(587.33, "sine", 0.4);
+          } else {
+            if (btn) btn.classList.remove("active");
+            if (icon) icon.setAttribute("data-lucide", "volume-x");
+            this.stopAmbientDrone();
+          }
+          if (window.lucide) lucide.createIcons();
+          return !this.isMuted;
+        }
+
+        startAmbientDrone() {
+          if (!this.ctx || this.isMuted) return;
+          this.stopAmbientDrone();
+
+          const gainNode = this.ctx.createGain();
+          gainNode.gain.setValueAtTime(0.04, this.ctx.currentTime);
+          gainNode.connect(this.ctx.destination);
+
+          const freqs = [146.83, 220.0, 293.66, 369.99]; // D minor ambient chord
+          this.bgOscs = freqs.map((f) => {
+            const osc = this.ctx.createOscillator();
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime(f, this.ctx.currentTime);
+            osc.connect(gainNode);
+            osc.start();
+            return osc;
+          });
+        }
+
+        stopAmbientDrone() {
+          if (this.bgOscs) {
+            this.bgOscs.forEach((o) => {
+              try {
+                o.stop();
+              } catch (e) {}
+            });
+            this.bgOscs = null;
+          }
+        }
+
+        playChime(freq = 440, type = "sine", duration = 0.3) {
+          if (!this.ctx || this.isMuted) return;
+          try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(
+              0.0001,
+              this.ctx.currentTime + duration,
+            );
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+          } catch (e) {}
+        }
+      }
+
+      const audio = new SoundEngine();
+      const audioBtn = document.getElementById("audio-toggle-btn");
+      if (audioBtn)
+        audioBtn.addEventListener("click", () => audio.toggleSound());
+
+      /* =========================================================================
+           2. PORTFOLIO DATA (Project Name + Link ONLY)
+           ========================================================================= */
+      const ZONES_DATA = {
+        cppTree: {
+          badge: "C++ WORLD PROJECTS",
+          title: "C++ Core Engine Projects",
+          projects: [
+            {
+              title: "GARVIS ",
+              link: "https://ziadnasar6-lgtm.github.io/GarvisWEB/",
+            },
+            {
+              title: "",
+              link: "",
+            },
+            {
+              title: "",
+              link: "",
+            },
+            {
+              title: "",
+              link: "",
+            },
+            {
+              title: "",
+              link: "",
+            },
+          ],
+        },
+        automationTree: {
+          badge: "AUTOMATION WORLD",
+          title: "AI & Automation Projects",
+          projects: [
+            {
+              title: "ALL automation ",
+              link: "https://ziadnasar6-lgtm.github.io/NassarWorld/",
+            },
+            {
+              title: "Seri_Programming_Assistant",
+              link: "https://github.com/ziadnasar6-lgtm/Seri_Programming_Assistant",
+            },
+            {
+              title: "Ai_Assistant_n8n ",
+              link: "https://github.com/ziadnasar6-lgtm/Ai_Assistant_n8n",
+            },
+            {
+              title: "AI_multi_AGENT_N8N ",
+              link: "https://github.com/ziadnasar6-lgtm/AI_multi_AGENT_N8N",
+            },
+            {
+              title: "AutoTube-AI-Photos-Sounds- ",
+              link: "https://github.com/ziadnasar6-lgtm/AutoTube-AI-Photos-Sounds-",
+            },
+            {
+              title: "OmniRAG-n8n ",
+              link: "https://github.com/ziadnasar6-lgtm/OmniRAG-n8n",
+            },
+          ],
+        },
+        portfolioTree: {
+          badge: "MY MAIN PORTFOLIO WORLD",
+          title: "Full Stack & Interactive Portfolios",
+          projects: [
+            { title: "Portofolio", link: "https://portofolio.nassar.top/" },
+            {
+              title: "Automation_portofolio",
+              link: "https://ziadnasar6-lgtm.github.io/NassarWorld/",
+            },
+          ],
+        },
+      };
+
+      /* =========================================================================
+           3. THREE.JS SYNTHESIZED 3D DATA FOREST
+           ========================================================================= */
+      const container = document.getElementById("webgl-container");
+
+      const scene = new THREE.Scene();
+      const fogColor = 0x1f0b2e; // Deep royal purple/violet atmospheric fog
+      scene.fog = new THREE.FogExp2(fogColor, 0.016);
+      scene.background = new THREE.Color(fogColor);
+
+      // Perspective Camera
+      const camera = new THREE.PerspectiveCamera(
+        50,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        200,
+      );
+      camera.position.set(0, 10, 26);
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        powerPreference: "high-performance",
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.35;
+      container.appendChild(renderer.domElement);
+
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxPolarAngle = Math.PI / 2 - 0.02;
+      controls.minDistance = 6;
+      controls.maxDistance = 65;
+      controls.target.set(0, 6, -6);
+
+      // Lighting System
+      const ambientLight = new THREE.AmbientLight(0x421b56, 1.9);
+      scene.add(ambientLight);
+
+      const moonLight = new THREE.DirectionalLight(0x7894ff, 1.6);
+      moonLight.position.set(-20, 35, 20);
+      moonLight.castShadow = true;
+      moonLight.shadow.mapSize.width = 1024;
+      moonLight.shadow.mapSize.height = 1024;
+      moonLight.shadow.bias = -0.001;
+      scene.add(moonLight);
+
+      const treeGoldLight = new THREE.PointLight(0xffb700, 5.5, 35);
+      treeGoldLight.position.set(0, 7, -8);
+      scene.add(treeGoldLight);
+
+      const poolCyanLight = new THREE.PointLight(0x00f3ff, 4.5, 22);
+      poolCyanLight.position.set(-11, 2, 8);
+      scene.add(poolCyanLight);
+
+      /* =========================================================================
+           4. 3D ENCHANTED TREES, 5 FLOATING CUBES & BIOLUMINESCENT WORLD
+           ========================================================================= */
+      const raycastObjects = [];
+
+      // Ground Floor Sculpted Terrain
+      const groundGeo = new THREE.PlaneGeometry(120, 120, 48, 48);
+      const posAttr = groundGeo.attributes.position;
+      for (let i = 0; i < posAttr.count; i++) {
+        const x = posAttr.getX(i);
+        const y = posAttr.getY(i);
+        const z =
+          Math.sin(x * 0.12) * Math.cos(y * 0.12) * 1.4 +
+          Math.sin(x * 0.25) * 0.3;
+        posAttr.setZ(i, z);
+      }
+      groundGeo.computeVertexNormals();
+
+      const groundMat = new THREE.MeshStandardMaterial({
+        color: 0x0c1924,
+        roughness: 0.85,
+        metalness: 0.1,
+        flatShading: true,
+      });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      // Procedural Magical 3D Branched Tree Builder
+      function createMagicalTree(
+        trunkColor,
+        foliageColor1,
+        foliageColor2,
+        zoneKey = null,
+        scale = 1.0,
+      ) {
+        const treeGroup = new THREE.Group();
+
+        const barkMat = new THREE.MeshStandardMaterial({
+          color: trunkColor,
+          emissive: 0x00f3ff,
+          emissiveIntensity: 0.15,
+          roughness: 0.8,
+          flatShading: true,
+        });
+
+        const foliageMat1 = new THREE.MeshStandardMaterial({
+          color: foliageColor1,
+          emissive: foliageColor1,
+          emissiveIntensity: 0.4,
+          roughness: 0.5,
+          flatShading: true,
+        });
+        const foliageMat2 = new THREE.MeshStandardMaterial({
+          color: foliageColor2,
+          emissive: foliageColor2,
+          emissiveIntensity: 0.4,
+          roughness: 0.5,
+          flatShading: true,
+        });
+
+        // Main Trunk
+        const trunkGeo = new THREE.CylinderGeometry(0.75, 1.7, 8, 8);
+        trunkGeo.translate(0, 4, 0);
+        const trunk = new THREE.Mesh(trunkGeo, barkMat);
+        trunk.castShadow = true;
+        treeGroup.add(trunk);
+
+        // 4 Primary Branched Limbs
+        const branchConfigs = [
+          { rotZ: 0.45, rotY: 0, length: 5.5, thickness: 0.55, posY: 6.5 },
+          {
+            rotZ: -0.42,
+            rotY: Math.PI / 2,
+            length: 5.0,
+            thickness: 0.5,
+            posY: 7.0,
+          },
+          {
+            rotZ: 0.38,
+            rotY: Math.PI,
+            length: 5.2,
+            thickness: 0.52,
+            posY: 6.8,
+          },
+          {
+            rotZ: -0.48,
+            rotY: -Math.PI / 2,
+            length: 4.8,
+            thickness: 0.48,
+            posY: 7.2,
+          },
+        ];
+
+        branchConfigs.forEach((cfg) => {
+          const branchGroup = new THREE.Group();
+          branchGroup.position.set(0, cfg.posY, 0);
+          branchGroup.rotation.y = cfg.rotY;
+          branchGroup.rotation.z = cfg.rotZ;
+
+          const bGeo = new THREE.CylinderGeometry(
+            cfg.thickness * 0.5,
+            cfg.thickness,
+            cfg.length,
+            6,
+          );
+          bGeo.translate(0, cfg.length / 2, 0);
+          const branchMesh = new THREE.Mesh(bGeo, barkMat);
+          branchMesh.castShadow = true;
+          branchGroup.add(branchMesh);
+
+          // Foliage Cluster
+          const fSize = 2.4 + Math.random() * 0.8;
+          const foliage = new THREE.Mesh(
+            new THREE.IcosahedronGeometry(fSize, 1),
+            Math.random() > 0.5 ? foliageMat1 : foliageMat2,
+          );
+          foliage.position.set(0, cfg.length, 0);
+          foliage.castShadow = true;
+          branchGroup.add(foliage);
+
+          // Hanging bioluminescent fruit
+          const fruitColor = Math.random() > 0.5 ? 0x00f3ff : 0xff2a85;
+          const fruit = new THREE.Mesh(
+            new THREE.SphereGeometry(0.38, 8, 8),
+            new THREE.MeshStandardMaterial({
+              color: fruitColor,
+              emissive: fruitColor,
+              emissiveIntensity: 2.2,
+            }),
+          );
+          fruit.position.set(0.3, cfg.length * 0.6, 0.3);
+          branchGroup.add(fruit);
+
+          treeGroup.add(branchGroup);
+        });
+
+        // Top Center Crown Foliage
+        const topCrown = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(3.6, 1),
+          foliageMat1,
+        );
+        topCrown.position.set(0, 9.5, 0);
+        topCrown.castShadow = true;
+        treeGroup.add(topCrown);
+
+        // Add Magical Point Light inside tree
+        const treeLight = new THREE.PointLight(foliageColor1, 2.5, 14);
+        treeLight.position.set(0, 8, 0);
+        treeGroup.add(treeLight);
+
+        if (zoneKey) {
+          const hitMesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(4, 4, 14, 8),
+            new THREE.MeshBasicMaterial({ visible: false }),
+          );
+          hitMesh.position.y = 7;
+          hitMesh.userData = { zoneKey: zoneKey };
+          treeGroup.add(hitMesh);
+          raycastObjects.push(hitMesh);
+        }
+
+        treeGroup.scale.set(scale, scale, scale);
+        return treeGroup;
+      }
+
+      // 1. Trunk Energy Veins Generator (Golden Electrical Lava/Veins in Bark)
+      const rootMeshes = [];
+      function addTrunkEnergyVeins(
+        treeGroup,
+        rTop,
+        rBot,
+        height = 8,
+        yCenter = 4,
+        veinCount = 8,
+      ) {
+        for (let i = 0; i < veinCount; i++) {
+          const angle =
+            (i / veinCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+          const rt = rTop * 1.04;
+          const rb = rBot * 1.04;
+
+          const p1 = new THREE.Vector3(
+            Math.cos(angle) * rt,
+            yCenter + height / 2 - 0.5,
+            Math.sin(angle) * rt,
+          );
+          const p2 = new THREE.Vector3(
+            Math.cos(angle + 0.15) * (rt * 0.6 + rb * 0.4),
+            yCenter,
+            Math.sin(angle + 0.15) * (rt * 0.6 + rb * 0.4),
+          );
+          const p3 = new THREE.Vector3(
+            Math.cos(angle - 0.12) * (rt * 0.3 + rb * 0.7),
+            yCenter - height / 3,
+            Math.sin(angle - 0.12) * (rt * 0.3 + rb * 0.7),
+          );
+          const p4 = new THREE.Vector3(
+            Math.cos(angle + 0.22) * (rb * 1.35),
+            yCenter - height / 2,
+            Math.sin(angle + 0.22) * (rb * 1.35),
+          );
+
+          const curve = new THREE.CatmullRomCurve3([p1, p2, p3, p4]);
+          const tubeGeo = new THREE.TubeGeometry(
+            curve,
+            16,
+            0.08 + Math.random() * 0.06,
+            6,
+            false,
+          );
+          const tubeMat = new THREE.MeshStandardMaterial({
+            color: 0xffb700,
+            emissive: 0xffb700,
+            emissiveIntensity: 3.5,
+            roughness: 0.1,
+            metalness: 0.9,
+          });
+          const veinMesh = new THREE.Mesh(tubeGeo, tubeMat);
+          treeGroup.add(veinMesh);
+          rootMeshes.push(veinMesh);
+        }
+      }
+
+      // 2. Direct Curved Engraved Super-Power Badge (Flush on Tree Bark)
+      const glowingPlaques = [];
+      function createDirectEngravedBadge(
+        titleText,
+        subtitleText = "",
+        accentColor = "#00f3ff",
+        radius = 1.75,
+      ) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext("2d");
+
+        // Transparent background with subtle dark cyber fill
+        ctx.clearRect(0, 0, 512, 256);
+        ctx.fillStyle = "rgba(8, 5, 2, 0.78)";
+        ctx.fillRect(12, 12, 488, 232);
+
+        // Gold Gradient Outer Border
+        const goldGrad = ctx.createLinearGradient(0, 0, 512, 256);
+        goldGrad.addColorStop(0, "#ffb700");
+        goldGrad.addColorStop(0.3, "#fff5b8");
+        goldGrad.addColorStop(0.7, "#ff9d00");
+        goldGrad.addColorStop(1, "#ffb700");
+
+        ctx.strokeStyle = goldGrad;
+        ctx.lineWidth = 12;
+        ctx.strokeRect(16, 16, 480, 224);
+
+        // Cyber Accent Frame
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(28, 28, 456, 200);
+
+        // Intense Gold Text Glow Effect
+        ctx.shadowColor = "#ffb700";
+        ctx.shadowBlur = 30;
+
+        // Main Title Text
+        ctx.font = "900 66px 'Outfit', sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(titleText, 256, subtitleText ? 102 : 128);
+
+        ctx.fillStyle = "#ffb700";
+        ctx.fillText(titleText, 256, subtitleText ? 102 : 128);
+
+        // Subtitle Text
+        if (subtitleText) {
+          ctx.shadowColor = accentColor;
+          ctx.shadowBlur = 15;
+          ctx.fillStyle = accentColor;
+          ctx.font = "bold 28px 'JetBrains Mono', monospace";
+          ctx.fillText(subtitleText, 256, 174);
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearFilter;
+
+        // Curved cylinder segment matching trunk curvature
+        const badgeGeo = new THREE.CylinderGeometry(
+          radius * 1.03,
+          radius * 1.03,
+          1.8,
+          32,
+          1,
+          true,
+          -Math.PI / 3.2,
+          (Math.PI * 2) / 3.2,
+        );
+        const badgeMat = new THREE.MeshStandardMaterial({
+          map: texture,
+          transparent: true,
+          alphaTest: 0.05,
+          emissive: 0xffb700,
+          emissiveIntensity: 2.8,
+          side: THREE.DoubleSide,
+          roughness: 0.2,
+          metalness: 0.85,
+        });
+
+        const badgeMesh = new THREE.Mesh(badgeGeo, badgeMat);
+        glowingPlaques.push(badgeMesh);
+        return badgeMesh;
+      }
+
+      // 3. Floating 3D Holographic Glass Panel Generator
+      function createHolographicGlassPanel(
+        headerText,
+        lines = [],
+        accentColor = "#00f3ff",
+      ) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 512;
+        canvas.height = 320;
+        const ctx = canvas.getContext("2d");
+
+        ctx.fillStyle = "rgba(6, 12, 24, 0.88)";
+        ctx.fillRect(0, 0, 512, 320);
+
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 8;
+        ctx.strokeRect(10, 10, 492, 300);
+
+        ctx.fillStyle = accentColor;
+        ctx.fillRect(10, 10, 492, 45);
+
+        ctx.fillStyle = "#040810";
+        ctx.font = "900 22px monospace";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText(headerText, 25, 32);
+
+        ctx.font = "17px monospace";
+        ctx.fillStyle = "#ffffff";
+        lines.forEach((line, idx) => {
+          ctx.fillText(line, 25, 85 + idx * 36);
+        });
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const panelGeo = new THREE.PlaneGeometry(5.4, 3.35);
+        const panelMat = new THREE.MeshStandardMaterial({
+          map: texture,
+          transparent: true,
+          opacity: 0.92,
+          emissive: accentColor,
+          emissiveIntensity: 0.7,
+          side: THREE.DoubleSide,
+        });
+        const panelMesh = new THREE.Mesh(panelGeo, panelMat);
+        panelMesh.castShadow = true;
+        return panelMesh;
+      }
+
+      // Left World Tree: Automation & AI Tree
+      const autoTree = createMagicalTree(
+        0x182430,
+        0x00f3ff,
+        0x00ffaa,
+        "automationTree",
+        1.1,
+      );
+      autoTree.position.set(-14, 0, 4);
+      addTrunkEnergyVeins(autoTree, 0.75, 1.7, 8, 4, 8);
+      const autoBadge = createDirectEngravedBadge(
+        "AUTOMATION",
+        "AI & BOT WORLD",
+        "#00ffaa",
+        1.2,
+      );
+      autoBadge.position.set(0, 4.4, 0);
+      autoTree.add(autoBadge);
+      scene.add(autoTree);
+
+      // Right World Tree: My Main Portfolio Tree
+      const portfolioTree = createMagicalTree(
+        0x281624,
+        0xff2a85,
+        0xffb700,
+        "portfolioTree",
+        1.1,
+      );
+      portfolioTree.position.set(14, 0, 4);
+      addTrunkEnergyVeins(portfolioTree, 0.75, 1.7, 8, 4, 8);
+      const portfolioBadge = createDirectEngravedBadge(
+        "PORTFOLIO",
+        "MAIN WORLD",
+        "#ff2a85",
+        1.2,
+      );
+      portfolioBadge.position.set(0, 4.4, 0);
+      portfolioTree.add(portfolioBadge);
+      scene.add(portfolioTree);
+
+      // Background Magical Trees
+      const forestCoords = [
+        [-22, -10],
+        [-18, -20],
+        [22, -10],
+        [18, -20],
+        [-10, 20],
+        [10, 20],
+      ];
+      forestCoords.forEach((c) => {
+        const bTree = createMagicalTree(
+          0x1e140d,
+          0x0e363c,
+          0x164e56,
+          null,
+          0.85 + Math.random() * 0.3,
+        );
+        bTree.position.set(c[0], 0, c[1]);
+        scene.add(bTree);
+      });
+
+      // Central C++ World Tree
+      const cppTreeGroup = new THREE.Group();
+      cppTreeGroup.position.set(0, 0, -8);
+
+      const trunkMat = new THREE.MeshStandardMaterial({
+        color: 0x241611,
+        roughness: 0.85,
+        flatShading: true,
+      });
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(2.4, 4.8, 14, 8),
+        trunkMat,
+      );
+      trunk.position.y = 7;
+      trunk.castShadow = true;
+      cppTreeGroup.add(trunk);
+
+      // 6 Large Branched Limbs for C++ Tree
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const limbGroup = new THREE.Group();
+        limbGroup.position.set(0, 11, 0);
+        limbGroup.rotation.y = angle;
+        limbGroup.rotation.z = 0.5;
+
+        const limb = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.5, 1.2, 7, 6),
+          trunkMat,
+        );
+        limb.position.y = 3.5;
+        limb.castShadow = true;
+        limbGroup.add(limb);
+
+        const limbCanopy = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(3.8, 1),
+          new THREE.MeshStandardMaterial({
+            color: 0x164e56,
+            emissive: 0x00f3ff,
+            emissiveIntensity: 0.4,
+            roughness: 0.6,
+            flatShading: true,
+          }),
+        );
+        limbCanopy.position.y = 7;
+        limbCanopy.castShadow = true;
+        limbGroup.add(limbCanopy);
+
+        cppTreeGroup.add(limbGroup);
+      }
+
+      // Golden Energy Tube Roots
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const rootCurve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(Math.cos(angle) * 3, 2.5, Math.sin(angle) * 3),
+          new THREE.Vector3(Math.cos(angle) * 5.2, 0.4, Math.sin(angle) * 5.2),
+          new THREE.Vector3(Math.cos(angle) * 8.2, 0.05, Math.sin(angle) * 8.2),
+        ]);
+        const rootMesh = new THREE.Mesh(
+          new THREE.TubeGeometry(rootCurve, 16, 0.28, 6, false),
+          new THREE.MeshStandardMaterial({
+            color: 0xffaa00,
+            emissive: 0xffaa00,
+            emissiveIntensity: 2.2,
+            roughness: 0.2,
+          }),
+        );
+        cppTreeGroup.add(rootMesh);
+        rootMeshes.push(rootMesh);
+      }
+
+      // Main Center Top Canopy
+      const mainCanopy = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(7.8, 1),
+        new THREE.MeshStandardMaterial({
+          color: 0x0e363c,
+          emissive: 0x00f3ff,
+          emissiveIntensity: 0.5,
+          roughness: 0.6,
+          flatShading: true,
+        }),
+      );
+      mainCanopy.position.y = 17;
+      mainCanopy.castShadow = true;
+      cppTreeGroup.add(mainCanopy);
+
+      // 3D Hexagon C++ Emblem Logo
+      function createHexTexture() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 256;
+        canvas.height = 256;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#08121a";
+        ctx.fillRect(0, 0, 256, 256);
+        ctx.strokeStyle = "#00f3ff";
+        ctx.lineWidth = 12;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2 - Math.PI / 6;
+          const x = 128 + 90 * Math.cos(a),
+            y = 128 + 90 * Math.sin(a);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 75px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("C++", 128, 128);
+        return new THREE.CanvasTexture(canvas);
+      }
+
+      // Add Trunk Energy Veins to Central C++ Tree
+      addTrunkEnergyVeins(cppTreeGroup, 2.4, 4.8, 14, 7, 10);
+
+      const hexEmblem = new THREE.Mesh(
+        new THREE.CylinderGeometry(2.1, 2.1, 0.4, 6),
+        new THREE.MeshStandardMaterial({
+          map: createHexTexture(),
+          emissive: 0x00f3ff,
+          emissiveIntensity: 1.4,
+          metalness: 0.8,
+        }),
+      );
+      hexEmblem.rotation.x = Math.PI / 2;
+      hexEmblem.position.set(0, 7.8, 2.7);
+      hexEmblem.userData = { zoneKey: "cppTree", isLogo: true };
+      cppTreeGroup.add(hexEmblem);
+      raycastObjects.push(hexEmblem);
+
+      const cppBadge = createDirectEngravedBadge(
+        "C++ CORE",
+        "SUPER POWER",
+        "#00f3ff",
+        2.4,
+      );
+      cppBadge.position.set(0, 4.4, 0);
+      cppTreeGroup.add(cppBadge);
+
+      // Floating 3D Holographic Code & Telemetry Panels (Matching Reference Image)
+      const holoLeft = createHolographicGlassPanel(
+        "// C++ SIMD ENGINE",
+        [
+          "#include <immintrin.h>",
+          "void vectorize_forest() {",
+          "  __m512 d = _mm512_set1_ps(60.0f);",
+          "  std::cout << '[AVX-512] RUNNING';",
+          "}",
+        ],
+        "#00f3ff",
+      );
+      holoLeft.position.set(-7.5, 9.8, 0.5);
+      holoLeft.rotation.y = 0.32;
+      cppTreeGroup.add(holoLeft);
+
+      const holoRight = createHolographicGlassPanel(
+        "SYSTEM TELEMETRY",
+        [
+          "TARGET: x86_64 SIMD VECTOR",
+          "RENDERER: VULKAN 1.3 PATH TRACE",
+          "FPS: 60 WebGL OPTIMAL",
+          "STATUS: ONLINE & ACTIVE",
+        ],
+        "#ffb700",
+      );
+      holoRight.position.set(7.5, 9.8, 0.5);
+      holoRight.rotation.y = -0.32;
+      cppTreeGroup.add(holoRight);
+
+      // Glowing Runic Floor Pathway (Matching Reference Image)
+      const runePathGroup = new THREE.Group();
+      const runeSymbols = [
+        "ᚠ",
+        "ᚢ",
+        "ᚦ",
+        "ᚨ",
+        "ᚱ",
+        "ᚲ",
+        "ᚷ",
+        "ᚹ",
+        "ᚺ",
+        "ᚾ",
+        "ᛁ",
+        "ᛃ",
+        "ᛈ",
+      ];
+      for (let i = 0; i < 20; i++) {
+        const t = i / 20;
+        const z = THREE.MathUtils.lerp(18, -4, t);
+        const x = Math.sin(t * Math.PI * 2) * 3.5;
+
+        const canvas = document.createElement("canvas");
+        canvas.width = 128;
+        canvas.height = 128;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, 128, 128);
+
+        ctx.strokeStyle = "#00f3ff";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(64, 64, 52, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffb700";
+        ctx.font = "bold 55px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(runeSymbols[i % runeSymbols.length], 64, 64);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        const runeMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.5, 1.5),
+          new THREE.MeshStandardMaterial({
+            map: tex,
+            transparent: true,
+            emissive: 0x00f3ff,
+            emissiveIntensity: 1.8,
+            roughness: 0.2,
+          }),
+        );
+        runeMesh.rotation.x = -Math.PI / 2;
+        runeMesh.position.set(x, 0.15, z);
+        runePathGroup.add(runeMesh);
+      }
+      scene.add(runePathGroup);
+
+      const treeHit = new THREE.Mesh(
+        new THREE.CylinderGeometry(6, 6, 18, 8),
+        new THREE.MeshBasicMaterial({ visible: false }),
+      );
+      treeHit.position.y = 9;
+      treeHit.userData = {
+        name: "Central C++ Tree Core",
+        zoneKey: "cppTree",
+        type: "tree",
+      };
+      cppTreeGroup.add(treeHit);
+      raycastObjects.push(treeHit);
+      scene.add(cppTreeGroup);
+
+      /* =========================================================================
+           5. 5 FLOATING GLOWING 3D PROJECT CUBES AROUND C++ TREE
+           ========================================================================= */
+      const cubeGroup = new THREE.Group();
+      cubeGroup.position.set(0, 7.8, -8);
+      scene.add(cubeGroup);
+
+      function createCubeTexture(title) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 256;
+        canvas.height = 256;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#0a1420";
+        ctx.fillRect(0, 0, 256, 256);
+        ctx.strokeStyle = "#00f3ff";
+        ctx.lineWidth = 8;
+        ctx.strokeRect(8, 8, 240, 240);
+        ctx.fillStyle = "#ffb700";
+        ctx.font = "bold 22px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // Wrap text
+        const words = title.split(" ");
+        if (words.length > 2) {
+          ctx.fillText(words.slice(0, 2).join(" "), 128, 105);
+          ctx.fillText(words.slice(2).join(" "), 128, 145);
+        } else {
+          ctx.fillText(title, 128, 128);
+        }
+        return new THREE.CanvasTexture(canvas);
+      }
+
+      const cppProjects = ZONES_DATA.cppTree.projects;
+      const projectCubes = [];
+      for (let i = 0; i < 5; i++) {
+        const proj = cppProjects[i];
+        const cubeMat = new THREE.MeshStandardMaterial({
+          map: createCubeTexture(proj.title),
+          emissive: 0x00f3ff,
+          emissiveIntensity: 0.5,
+          roughness: 0.2,
+          metalness: 0.8,
+        });
+
+        const cube = new THREE.Mesh(
+          new THREE.BoxGeometry(1.4, 1.4, 1.4),
+          cubeMat,
+        );
+        const angle = (i / 5) * Math.PI * 2;
+        const radius = 5.5;
+        cube.position.set(
+          Math.cos(angle) * radius,
+          Math.sin(i * 1.2) * 1.2,
+          Math.sin(angle) * radius,
+        );
+        cube.userData = {
+          project: proj,
+          zoneKey: "cppTree",
+          isProjectCube: true,
+        };
+        cubeGroup.add(cube);
+        projectCubes.push(cube);
+        raycastObjects.push(cube);
+      }
+
+      function triggerCubeExplosion() {
+        projectCubes.forEach((cube, i) => {
+          const angle = (i / 5) * Math.PI * 2;
+          gsap.to(cube.position, {
+            x: Math.cos(angle) * 7.5,
+            y: Math.sin(i * 1.5) * 2.0,
+            z: Math.sin(angle) * 7.5,
+            duration: 1.2,
+            ease: "back.out(1.7)",
+          });
+          gsap.to(cube.rotation, {
+            x: Math.PI * 2,
+            y: Math.PI * 2,
+            duration: 1.5,
+            ease: "power2.out",
+          });
+        });
+        audio.playChime(880, "triangle", 0.5);
+      }
+
+      // Enchanted Boulders & Mushroom Clusters
+      function create3DMushroomGroup(capColor, emissiveColor, scale = 1.0) {
+        const shroomGroup = new THREE.Group();
+
+        const stemGeo = new THREE.CylinderGeometry(0.08, 0.14, 1.0, 6);
+        stemGeo.translate(0, 0.5, 0);
+        const stemMat = new THREE.MeshStandardMaterial({
+          color: 0xe0e7ff,
+          emissive: emissiveColor,
+          emissiveIntensity: 0.4,
+          roughness: 0.3,
+          flatShading: true,
+        });
+        const stem = new THREE.Mesh(stemGeo, stemMat);
+        stem.rotation.z = (Math.random() - 0.5) * 0.25;
+        shroomGroup.add(stem);
+
+        const capGeo = new THREE.SphereGeometry(
+          0.45,
+          10,
+          8,
+          0,
+          Math.PI * 2,
+          0,
+          Math.PI * 0.55,
+        );
+        const capMat = new THREE.MeshStandardMaterial({
+          color: capColor,
+          emissive: emissiveColor,
+          emissiveIntensity: 1.2,
+          roughness: 0.2,
+          flatShading: true,
+        });
+        const cap = new THREE.Mesh(capGeo, capMat);
+        cap.position.y = 1.0;
+        shroomGroup.add(cap);
+
+        for (let i = 0; i < 4; i++) {
+          const spot = new THREE.Mesh(
+            new THREE.SphereGeometry(0.08, 6, 6),
+            new THREE.MeshStandardMaterial({
+              color: 0xffffff,
+              emissive: 0xffffff,
+              emissiveIntensity: 2.0,
+            }),
+          );
+          const a = (i / 4) * Math.PI * 2;
+          spot.position.set(Math.cos(a) * 0.28, 1.2, Math.sin(a) * 0.28);
+          shroomGroup.add(spot);
+        }
+
+        shroomGroup.scale.set(scale, scale, scale);
+        return shroomGroup;
+      }
+
+      function create3DFlowerGroup(colorHex, emissiveHex, scale = 1.0) {
+        const flowerGroup = new THREE.Group();
+
+        const stemGeo = new THREE.CylinderGeometry(0.04, 0.06, 1.2, 5);
+        stemGeo.translate(0, 0.6, 0);
+        const stemMat = new THREE.MeshStandardMaterial({
+          color: 0x145a24,
+          roughness: 0.7,
+          flatShading: true,
+        });
+        const stem = new THREE.Mesh(stemGeo, stemMat);
+        stem.rotation.z = (Math.random() - 0.5) * 0.2;
+        flowerGroup.add(stem);
+
+        const petalCount = 5 + Math.floor(Math.random() * 3);
+        const petalMat = new THREE.MeshStandardMaterial({
+          color: colorHex,
+          emissive: emissiveHex,
+          emissiveIntensity: 0.8,
+          roughness: 0.3,
+          flatShading: true,
+        });
+        const petalContainer = new THREE.Group();
+        petalContainer.position.y = 1.2;
+
+        for (let i = 0; i < petalCount; i++) {
+          const angle = (i / petalCount) * Math.PI * 2;
+          const petal = new THREE.Mesh(
+            new THREE.ConeGeometry(0.18, 0.55, 4),
+            petalMat,
+          );
+          petal.rotation.z = Math.PI / 2.5;
+          petal.position.set(Math.cos(angle) * 0.25, 0, Math.sin(angle) * 0.25);
+          petal.rotation.y = -angle;
+          petalContainer.add(petal);
+        }
+
+        const centerBulb = new THREE.Mesh(
+          new THREE.SphereGeometry(0.16, 8, 8),
+          new THREE.MeshStandardMaterial({
+            color: 0xffe600,
+            emissive: 0xffa500,
+            emissiveIntensity: 1.4,
+          }),
+        );
+        centerBulb.position.y = 1.2;
+        flowerGroup.add(centerBulb);
+
+        flowerGroup.add(petalContainer);
+        flowerGroup.scale.set(scale, scale, scale);
+        return flowerGroup;
+      }
+
+      const flowerColors = [
+        { color: 0xff2a85, emissive: 0xaa0055 },
+        { color: 0x00f3ff, emissive: 0x0088cc },
+        { color: 0xffb700, emissive: 0xcc8800 },
+        { color: 0xa855f7, emissive: 0x6b21a8 },
+        { color: 0x00ffaa, emissive: 0x008855 },
+      ];
+
+      const shroomColors = [
+        { cap: 0xff007f, emissive: 0xff007f },
+        { cap: 0x00f3ff, emissive: 0x00f3ff },
+        { cap: 0x9d4edd, emissive: 0x9d4edd },
+        { cap: 0x00ffaa, emissive: 0x00ffaa },
+        { cap: 0xffb700, emissive: 0xffb700 },
+      ];
+
+      const enchantedRockGroup = new THREE.Group();
+      for (let i = 0; i < 55; i++) {
+        const rGroup = new THREE.Group();
+        const scaleX = 1.0 + Math.random() * 2.2;
+        const scaleY = 0.6 + Math.random() * 1.6;
+        const scaleZ = 1.0 + Math.random() * 2.2;
+
+        const encRockMat = new THREE.MeshStandardMaterial({
+          color: 0x141e28,
+          emissive: i % 2 === 0 ? 0x00f3ff : 0xff2a85,
+          emissiveIntensity: 0.15,
+          roughness: 0.7,
+          flatShading: true,
+        });
+
+        const rockMesh = new THREE.Mesh(
+          new THREE.DodecahedronGeometry(1, 1),
+          encRockMat,
+        );
+        rockMesh.scale.set(scaleX, scaleY, scaleZ);
+        rockMesh.rotation.set(
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+        );
+        rockMesh.castShadow = true;
+        rockMesh.receiveShadow = true;
+        rGroup.add(rockMesh);
+
+        const shroomCount = 2 + Math.floor(Math.random() * 3);
+        for (let s = 0; s < shroomCount; s++) {
+          const sc =
+            shroomColors[Math.floor(Math.random() * shroomColors.length)];
+          const shroom = create3DMushroomGroup(
+            sc.cap,
+            sc.emissive,
+            0.4 + Math.random() * 0.4,
+          );
+          shroom.position.set(
+            (Math.random() - 0.5) * scaleX * 0.7,
+            scaleY * 0.7,
+            (Math.random() - 0.5) * scaleZ * 0.7,
+          );
+          rGroup.add(shroom);
+        }
+
+        rGroup.position.set(
+          (Math.random() - 0.5) * 82,
+          scaleY / 2.2,
+          (Math.random() - 0.5) * 82,
+        );
+        enchantedRockGroup.add(rGroup);
+      }
+      scene.add(enchantedRockGroup);
+
+      // Scatter 3D Bioluminescent Flowers across terrain
+      const flowersGroup = new THREE.Group();
+      for (let i = 0; i < 180; i++) {
+        const palette =
+          flowerColors[Math.floor(Math.random() * flowerColors.length)];
+        const scale = 0.6 + Math.random() * 0.75;
+        const fl = create3DFlowerGroup(palette.color, palette.emissive, scale);
+        const rx = (Math.random() - 0.5) * 78;
+        const rz = (Math.random() - 0.5) * 78;
+        fl.position.set(rx, 0, rz);
+        fl.rotation.y = Math.random() * Math.PI * 2;
+        flowersGroup.add(fl);
+      }
+      scene.add(flowersGroup);
+
+      // Instanced Grass Blades
+      const grassCount = 2200;
+      const grassGeo = new THREE.ConeGeometry(0.14, 0.9, 3);
+      grassGeo.translate(0, 0.45, 0);
+      const grassMat = new THREE.MeshStandardMaterial({
+        color: 0x00ffaa,
+        emissive: 0x005533,
+        emissiveIntensity: 0.35,
+        roughness: 0.6,
+        flatShading: true,
+      });
+      const grassMesh = new THREE.InstancedMesh(grassGeo, grassMat, grassCount);
+      const dummy = new THREE.Object3D();
+
+      for (let i = 0; i < grassCount; i++) {
+        dummy.position.set(
+          (Math.random() - 0.5) * 82,
+          0.1,
+          (Math.random() - 0.5) * 82,
+        );
+        dummy.rotation.y = Math.random() * Math.PI * 2;
+        const scale = 0.6 + Math.random() * 0.7;
+        dummy.scale.set(scale, scale, scale);
+        dummy.updateMatrix();
+        grassMesh.setMatrixAt(i, dummy.matrix);
+      }
+      grassMesh.instanceMatrix.needsUpdate = true;
+      scene.add(grassMesh);
+
+      // Playable Foreground Explorer Robot Avatar
+      const botGroup = new THREE.Group();
+      botGroup.position.set(0, 0, 16);
+      const botHead = new THREE.Mesh(
+        new THREE.BoxGeometry(0.9, 0.7, 0.8),
+        new THREE.MeshStandardMaterial({ color: 0x283442, flatShading: true }),
+      );
+      botHead.position.y = 1.6;
+      botGroup.add(botHead);
+
+      const visor = new THREE.Mesh(
+        new THREE.BoxGeometry(0.7, 0.25, 0.1),
+        new THREE.MeshStandardMaterial({
+          color: 0x00f3ff,
+          emissive: 0x00f3ff,
+          emissiveIntensity: 2.2,
+        }),
+      );
+      visor.position.set(0, 1.65, 0.42);
+      botGroup.add(visor);
+
+      const botBody = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5, 0.4, 0.9, 6),
+        new THREE.MeshStandardMaterial({ color: 0x283442, flatShading: true }),
+      );
+      botBody.position.y = 0.85;
+      botGroup.add(botBody);
+
+      const chestCore = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2, 8, 8),
+        new THREE.MeshStandardMaterial({
+          color: 0x00f3ff,
+          emissive: 0x00f3ff,
+          emissiveIntensity: 2.2,
+        }),
+      );
+      chestCore.position.set(0, 0.9, 0.35);
+      botGroup.add(chestCore);
+      scene.add(botGroup);
+
+      // 2,500 Floating Spore Particles
+      const particleCount = 2500;
+      const particleGeo = new THREE.BufferGeometry();
+      const particlePositions = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount; i++) {
+        particlePositions[i * 3] = (Math.random() - 0.5) * 85;
+        particlePositions[i * 3 + 1] = Math.random() * 28;
+        particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 85;
+      }
+      particleGeo.setAttribute(
+        "position",
+        new THREE.BufferAttribute(particlePositions, 3),
+      );
+      const particleSystem = new THREE.Points(
+        particleGeo,
+        new THREE.PointsMaterial({
+          color: 0x00f3ff,
+          size: 0.35,
+          transparent: true,
+          opacity: 0.85,
+          blending: THREE.AdditiveBlending,
+        }),
+      );
+      scene.add(particleSystem);
+
+      /* =========================================================================
+           6. CONTROLLER & PROXIMITY
+           ========================================================================= */
+      const keys = { w: false, a: false, s: false, d: false, shift: false };
+      window.addEventListener("keydown", (e) => {
+        const k = e.key.toLowerCase();
+        if (k === "w" || k === "arrowup") keys.w = true;
+        if (k === "s" || k === "arrowdown") keys.s = true;
+        if (k === "a" || k === "arrowleft") keys.a = true;
+        if (k === "d" || k === "arrowright") keys.d = true;
+        if (k === "shift") keys.shift = true;
+        if (k === "e") triggerProximityInteraction();
+      });
+      window.addEventListener("keyup", (e) => {
+        const k = e.key.toLowerCase();
+        if (k === "w" || k === "arrowup") keys.w = false;
+        if (k === "s" || k === "arrowdown") keys.s = false;
+        if (k === "a" || k === "arrowleft") keys.a = false;
+        if (k === "d" || k === "arrowright") keys.d = false;
+        if (k === "shift") keys.shift = false;
+      });
+
+      const moveDir = new THREE.Vector3();
+      function updateCharacterPhysics(delta) {
+        const speed = keys.shift ? 10 : 6;
+        moveDir.set(0, 0, 0);
+        if (keys.w) moveDir.z -= 1;
+        if (keys.s) moveDir.z += 1;
+        if (keys.a) moveDir.x -= 1;
+        if (keys.d) moveDir.x += 1;
+
+        if (moveDir.lengthSq() > 0) {
+          moveDir.normalize();
+          botGroup.rotation.y = Math.atan2(moveDir.x, moveDir.z);
+          botGroup.position.x += moveDir.x * speed * delta;
+          botGroup.position.z += moveDir.z * speed * delta;
+          botGroup.position.x = THREE.MathUtils.clamp(
+            botGroup.position.x,
+            -35,
+            35,
+          );
+          botGroup.position.z = THREE.MathUtils.clamp(
+            botGroup.position.z,
+            -35,
+            35,
+          );
+
+          camera.position.x = THREE.MathUtils.lerp(
+            camera.position.x,
+            botGroup.position.x,
+            0.1,
+          );
+          camera.position.z = THREE.MathUtils.lerp(
+            camera.position.z,
+            botGroup.position.z + 10,
+            0.1,
+          );
+          controls.target.set(botGroup.position.x, 6, botGroup.position.z - 16);
+        }
+      }
+
+      const PROXIMITY_ZONES = [
+        {
+          key: "cppTree",
+          pos: new THREE.Vector3(0, 0, -8),
+          dist: 7,
+          label: "PRESS [E] TO EXPLODE 5 C++ 3D CUBES",
+        },
+        {
+          key: "automationTree",
+          pos: new THREE.Vector3(-14, 0, 4),
+          dist: 7,
+          label: "PRESS [E] TO INSPECT AUTOMATION WORLD",
+        },
+        {
+          key: "portfolioTree",
+          pos: new THREE.Vector3(14, 0, 4),
+          dist: 7,
+          label: "PRESS [E] TO OPEN MY MAIN PORTFOLIO WORLD",
+        },
+      ];
+      let activeZone = null;
+      const promptEl = document.getElementById("proximity-prompt");
+      const promptText = document.getElementById("prompt-text");
+
+      function checkProximity() {
+        let near = null;
+        for (const z of PROXIMITY_ZONES) {
+          if (botGroup.position.distanceTo(z.pos) < z.dist) {
+            near = z;
+            break;
+          }
+        }
+        if (near !== activeZone) {
+          activeZone = near;
+          if (activeZone) {
+            if (promptText) promptText.textContent = activeZone.label;
+            if (promptEl) promptEl.classList.add("active");
+          } else {
+            if (promptEl) promptEl.classList.remove("active");
+          }
+        }
+      }
+
+      function triggerProximityInteraction() {
+        if (activeZone) {
+          if (activeZone.key === "cppTree") triggerCubeExplosion();
+          openProjectModal(activeZone.key);
+        }
+      }
+      if (promptEl)
+        promptEl.addEventListener("click", triggerProximityInteraction);
+
+      /* =========================================================================
+           7. MODAL MANAGERS & RAYCASTER
+           ========================================================================= */
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      window.addEventListener("click", (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(raycastObjects);
+        if (intersects.length > 0) {
+          const obj = intersects[0].object;
+          if (obj.userData && obj.userData.isLogo) {
+            triggerCubeExplosion();
+          }
+          const zKey = obj.userData ? obj.userData.zoneKey : null;
+          if (zKey) openProjectModal(zKey);
+        }
+      });
+
+      const projectModal = document.getElementById("project-modal");
+      function openProjectModal(zoneKey) {
+        const data = ZONES_DATA[zoneKey];
+        if (!data) return;
+        const badge = document.getElementById("modal-badge");
+        const title = document.getElementById("modal-title");
+        const grid = document.getElementById("modal-projects-grid");
+
+        if (badge) badge.textContent = data.badge;
+        if (title) title.textContent = data.title;
+
+        // Render strictly Project Name + Link Button (NO description!)
+        if (grid) {
+          grid.innerHTML = data.projects
+            .map(
+              (p) => `
+                    <div class="project-card">
+                        <div class="project-card-title">${p.title}</div>
+                        <a href="${p.link}" target="_blank" class="project-link-btn">
+                            Project Link <i data-lucide="arrow-up-right" style="width: 14px; height: 14px;"></i>
+                        </a>
+                    </div>
+                `,
+            )
+            .join("");
+        }
+
+        if (window.lucide) lucide.createIcons();
+        if (projectModal) projectModal.classList.add("active");
+        audio.playChime(523.25, "sine", 0.3);
+      }
+
+      const closeBtn = document.getElementById("modal-close-btn");
+      if (closeBtn)
+        closeBtn.addEventListener("click", () => {
+          if (projectModal) projectModal.classList.remove("active");
+        });
+
+      // Terminal Modal Logic
+      const terminalModal = document.getElementById("terminal-modal");
+      const terminalTrigger = document.getElementById("terminal-trigger-btn");
+      const terminalClose = document.getElementById("terminal-close-btn");
+      const terminalInput = document.getElementById("terminal-input");
+      const terminalOutput = document.getElementById("terminal-output");
+
+      if (terminalTrigger) {
+        terminalTrigger.addEventListener("click", () => {
+          if (terminalModal) terminalModal.classList.add("active");
+          if (terminalInput) terminalInput.focus();
+          audio.playChime(659.25, "triangle", 0.3);
+        });
+      }
+      if (terminalClose) {
+        terminalClose.addEventListener("click", () => {
+          if (terminalModal) terminalModal.classList.remove("active");
+        });
+      }
+
+      if (terminalInput) {
+        terminalInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            const cmd = terminalInput.value.trim().toLowerCase();
+            terminalInput.value = "";
+            appendTerminalLine(`cpp-root@cyber-forest:~$ ${cmd}`);
+
+            if (cmd === "help") {
+              appendTerminalLine(
+                "Available commands:\n  help        - List terminal commands\n  ls          - List C++ system files\n  cat main.cpp- Print SIMD C++ engine code\n  status      - Display system performance telemetry\n  clear       - Clear terminal output",
+              );
+            } else if (cmd === "ls" || cmd === "projects") {
+              appendTerminalLine(
+                "modules:\n  [x86_64] jarvis_simd_core.cpp\n  [Vulkan] raytracer_pipeline.cpp\n  [Low-Lat] hft_matcher.cpp\n  [Audio] dsp_fft_synth.cpp",
+              );
+            } else if (cmd === "cat main.cpp" || cmd === "cat") {
+              appendTerminalLine(
+                '#include <iostream>\n#include <immintrin.h>\n\nint main() {\n    std::cout << "[SIMD] Initializing AVX-512 64-bit Lanes...\\n";\n    return 0;\n}',
+              );
+            } else if (cmd === "status") {
+              appendTerminalLine(
+                "CPU Target: AVX-512 SIMD Vectorized\nGPU Target: Vulkan 1.3 Path Tracing Engine\nFPS: 60 WebGL / ACES Filmic Tone Mapping\nStatus: OPTIMAL",
+              );
+            } else if (cmd === "clear") {
+              if (terminalOutput) terminalOutput.innerHTML = "";
+            } else {
+              appendTerminalLine(
+                `Command not recognized: '${cmd}'. Type 'help' for available commands.`,
+              );
+            }
+            if (terminalOutput)
+              terminalOutput.scrollTop = terminalOutput.scrollHeight;
+          }
+        });
+      }
+
+      function appendTerminalLine(text) {
+        if (terminalOutput) {
+          terminalOutput.innerHTML += text + "\n";
+        }
+      }
+
+      // Camera Controls Box handlers
+      const camPrev = document.getElementById("cam-prev-btn");
+      const camReset = document.getElementById("cam-reset-btn");
+      const camNext = document.getElementById("cam-next-btn");
+
+      if (camPrev)
+        camPrev.addEventListener("click", () => {
+          gsap.to(camera.position, { x: -14, y: 7, z: 12, duration: 1.5 });
+          gsap.to(controls.target, { x: -14, y: 3, z: 4, duration: 1.5 });
+          audio.playChime(440, "sine", 0.2);
+        });
+      if (camReset)
+        camReset.addEventListener("click", () => {
+          gsap.to(camera.position, { x: 0, y: 10, z: 26, duration: 1.5 });
+          gsap.to(controls.target, { x: 0, y: 6, z: -6, duration: 1.5 });
+          audio.playChime(523.25, "sine", 0.2);
+        });
+      if (camNext)
+        camNext.addEventListener("click", () => {
+          gsap.to(camera.position, { x: 14, y: 7, z: 12, duration: 1.5 });
+          gsap.to(controls.target, { x: 14, y: 3, z: 4, duration: 1.5 });
+          audio.playChime(659.25, "sine", 0.2);
+        });
+
+      /* =========================================================================
+           8. RENDER LOOP
+           ========================================================================= */
+      const clock = new THREE.Clock();
+      const compassDial = document.getElementById("compass-dial");
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+        const elapsedTime = clock.getElapsedTime();
+
+        try {
+          controls.update();
+          updateCharacterPhysics(delta);
+          checkProximity();
+
+          if (compassDial) {
+            const angleDeg = (controls.getAzimuthalAngle() * 180) / Math.PI;
+            compassDial.style.transform = `rotate(${-angleDeg}deg)`;
+          }
+
+          // Rotate 5 glowing 3D project cubes around C++ tree
+          cubeGroup.rotation.y = elapsedTime * 0.4;
+          projectCubes.forEach((cube, i) => {
+            cube.rotation.x = elapsedTime * 0.8 + i;
+            cube.rotation.z = elapsedTime * 0.6 + i;
+          });
+
+          // Pulse energy roots
+          rootMeshes.forEach((m, i) => {
+            if (m && m.material)
+              m.material.emissiveIntensity =
+                1.8 + Math.sin(elapsedTime * 3.5 + i) * 0.5;
+          });
+
+          // Pulse gold super-power badges
+          glowingPlaques.forEach((p, i) => {
+            if (p && p.material) {
+              p.material.emissiveIntensity =
+                2.8 + Math.sin(elapsedTime * 2.5 + i) * 0.6;
+            }
+          });
+
+          // Sway 3D flowers gently in wind
+          flowersGroup.children.forEach((fl, i) => {
+            fl.rotation.z = Math.sin(elapsedTime * 1.5 + i) * 0.08;
+            fl.rotation.x = Math.cos(elapsedTime * 1.2 + i) * 0.05;
+          });
+
+          // Drift spores efficiently
+          if (particleGeo && particleGeo.attributes.position) {
+            const pos = particleGeo.attributes.position.array;
+            for (let i = 1; i < particleCount * 3; i += 3) {
+              pos[i] += 0.02;
+              if (pos[i] > 28) pos[i] = 0;
+            }
+            particleGeo.attributes.position.needsUpdate = true;
+          }
+
+          renderer.render(scene, camera);
+        } catch (err) {
+          console.error("Render loop error:", err);
+        }
+      }
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      animate();
+    </script>
+  </body>
+</html>
